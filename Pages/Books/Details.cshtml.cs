@@ -1,25 +1,22 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
+﻿using Circei_Radu_Lab2.Data;
+using Circei_Radu_Lab2.Models;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.EntityFrameworkCore;
-using Circei_Radu_Lab2.Data;
-using Circei_Radu_Lab2.Models;
+using System.Threading.Tasks;
 
 namespace Circei_Radu_Lab2.Pages.Books
 {
     public class DetailsModel : PageModel
     {
-        private readonly Circei_Radu_Lab2.Data.Circei_Radu_Lab2Context _context;
+        private readonly Circei_Radu_Lab2Context _context;
 
-        public DetailsModel(Circei_Radu_Lab2.Data.Circei_Radu_Lab2Context context)
+        public DetailsModel(Circei_Radu_Lab2Context context)
         {
             _context = context;
         }
 
-        public Book Book { get; set; } = default!;
+        public Book Book { get; set; }
 
         public async Task<IActionResult> OnGetAsync(int? id)
         {
@@ -28,15 +25,19 @@ namespace Circei_Radu_Lab2.Pages.Books
                 return NotFound();
             }
 
-            var book = await _context.Book.FirstOrDefaultAsync(m => m.ID == id);
-            if (book == null)
+            Book = await _context.Book
+                .Include(b => b.Author)
+                .Include(b => b.Publisher)
+                .Include(b => b.BookCategories)
+                .ThenInclude(bc => bc.Category)
+                .AsNoTracking()
+                .FirstOrDefaultAsync(m => m.ID == id);
+
+            if (Book == null)
             {
                 return NotFound();
             }
-            else
-            {
-                Book = book;
-            }
+
             return Page();
         }
     }
